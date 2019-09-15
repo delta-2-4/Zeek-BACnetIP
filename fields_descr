@@ -1,0 +1,62 @@
+Field Name              Type        Description
+ts                      time        Standard Zeek timestamp
+uid                     string      Standard Zek UID for cross referencing connections
+id.orig_h               addr        Standard Zeek origin IP address
+id.org_p                port        Standard Zeek origin IP port
+id.resp_h               addr        Standard Zeek response IP address
+id.resp_p               port        Standard Zeek response IP port
+BVLL_pkts               count       The number of packets in a connection that have BACnet Virtual Link Layer (BVLL) content (this should be a count of all BACnet/IP packets)
+NPDU_pkts               count       The number of BACnet/IP packets in a connection that contain Network Protocol Data Units (NPDUs)
+APDU_pkts               count       The number of BACnet/IP packets in a connection that contain Application Protocol Data Units (APDUs)
+DST                     string      A summary of the destination networks and addresses seen in the connection that are non-IP based
+SRC                     string      A summary of the source networks and addresses seen in the connection that are non-IP based
+BVLC_Result             count       The number of BVLL BVLC-Result packets seen on the connection
+Write_BDT               count       The number of BVLL Write-Broadcast-Distribution-Table packets seen on the connection
+Read_BDT                count       The number of BVLL Read-Broadcast-Distribution-Table packets seen on the connection
+Read_BDT_ACK            count       The number of BVLL Read-Broadcast-Distribution-Table-ACK packets seen on the connection
+FWD_NPDU                count       The number of BVLL Forwarded-NPDU packets seen on the connection
+RFD                     count       The number of BVLL Register-Foreign-Device packets seen on the connection
+Read_FDT                count       The number of BVLL Read-Foreign-Device-Table packets seen on the connection
+Read_FDT_ACK            count       The number of BVLL Read-Foreign-Device-Table-Ack packets seen on the connection
+Del_FDT_Entry           count       The number of BVLL Delete-Foreign-Device-Table-Entry packets seen on the connection
+DBN                     count       The number of BVLL Distribute-Broadcast-To-Network packets seen on the connection
+Orig_Uni                count       The number of BVLL Original-Unicast-NPDU packets seen on the connection
+Orig_Broad              count       The number of BVLL Original-Broadcast-NPDU packets seen on the connection
+Secure_BVLL             count       The number of BVLL Secure-BVLL packets seen on the connection
+MT_Who_Is_Router        count       The number of NPDU Who-Is-Router-To-Network packets seen on the connection
+MT_I_Am_Router          count       The number of NPDU I-Am-Router-To-Network packets seen on the connection
+MT_Could_Be_Router      count       The number of NPDU I-Could-Be-Router-To-Network packets seen on the connection
+MT_Reject_Msg           count       The number of NPDU Reject-Message-To-Network packets seen on the connection
+MT_Router_Busy          count       The number of NPDU Router-Busy-To-Network packets seen on the connection
+MT_Router_Avail         count       The number of NPDU Router-Available-To-Network packets seen on the connection
+MT_Init_Route_Tbl       count       The number of NPDU Initialize-Routing-Table packets seen on the connection
+MT_Init_Route_TblACK    count       The number of NPDU Initialize-Routing-Table-Ack packets seen on the connection
+MT_Establish_Conn       count       The number of NPDU Establish-Connection-To-Network packets seen on the connection
+MT_Break_Conn           count       The number of NPDU Disconnect-Connection-To-Network packets seen on the connection
+MT_Challenge_Req        count       The number of NPDU Challenge-Request packets seen on the connection
+MT_Security_Payload     count       The number of NPDU Security-Payload packets seen on the connection
+MT_ Security_Resp       count       The number of NPDU Security-Response packets seen on the connection
+MT_Req_Key_Update       count       The number of NPDU Request-Key-Update packets seen on the connection
+MT_Update_Key_Set       count       The number of NPDU Update-Key-Set packets seen on the connection
+MT_Update_Distr_Key     count       The number of NPDU Update-Distribution-Key packets seen on the connection
+MT_Req_Master_Key       count       The number of NPDU Request-Master-Key packets seen on the connection
+MT_Set_Master_Key       count       The number of NPDU Set-Master-Key packets seen on the connection
+MT_What_Is_Net_Num      count       The number of NPDU What-Is-Network-Number packets seen on the connection
+MT_Net_Num_Is           count       The number of NPDU Network-Number-Is packets seen on the connection
+MT_Reserved             count       The number of NPDU packets with message types reserved for use by ASHRAE seen on the connection
+MT_Vendor_Custom        count       The number of NPDU packets with vendor proprietary message types seen on the connection
+Priority_Normal         count       The number of normal priority NPDU messages
+Priority_Urgent         count       The number of urgent priority NPDU messages
+Priority_Critical       count       The number of critical equipment priority NPDU messages
+Priority_Life           count       The number of life safety priority NPDU messages
+APDU_Total_Segments     count       The total number of segmenets seen on a connection
+APDU_Conf_Req           count       The number of confirmed-request-pdus seen on a connection
+APDU_Conf_Req_Segs      count       The number of segmenets for all confirmed-request-pdus seen on a connection
+APDU_Unconf_Req         count       The number of unconfirmed-request-pdus seen on a connection
+APDU_SimpleACK          count       The number of simple-ack-pdus seen on a connection
+APDU_ComplexACK         count       The number of complex-ack-pdus seen on a connection
+APDU_ComplexACK_Segs    count       The number of segmenets for all complex-ack-pdus seen on a connection
+APDU_SegmentACK         count       The number of segment-ack-pdus seen on a connection
+APDU_Error              count       The number of error-pdus seen on a connection
+APDU_Reject             count       The number of reject-pdus seen on a connection
+APDU_Abort              count       The number of abort-pdus seen on a connection
