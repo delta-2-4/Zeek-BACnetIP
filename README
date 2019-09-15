@@ -23,7 +23,7 @@ bro [commands, options, etc.] Heller::bacnet
 Behavior / Log file
 -------------------
 
-A bacnet.log file shouldbe created if you have any BACnet/IP packets on the wire or in the
+A bacnet.log file should be created if you have any BACnet/IP packets on the wire or in the
 capture you've fed into Zeek / Bro.  Below is a list of the fields and a description of their
 contents (also in the field_descr file):
 
