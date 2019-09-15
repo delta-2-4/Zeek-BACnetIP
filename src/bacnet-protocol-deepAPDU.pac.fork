@@ -1,0 +1,279 @@
+
+
+type BACnet_packet = record {
+	
+	BACnet_LL	:	BACnet_BVLC[];	#This is the BACnet Link Layer of a BACnet packet	
+
+ };
+
+#The BACnet_BVLC type describes the BACnet Virtual Link Control (BVLC) portion of a BACnet packet
+	type BACnet_BVLC = record {
+	 	BVLC_Type 		: uint8;  #May need to use this to select whether this is a BVLC, NPDU, LL, etc.  BVLC = 0x81, NPDU = 0x01
+		BVLC_Function 		: uint8;
+		BVLC_Length		: uint16;
+		BVLC_Data		: case BVLC_Function of {
+			0	-> BLVC_result			: uint16;
+			1	-> BLVC_write_broad_dist	: BDT_entry[(BVLC_Length - 4)/10];
+			2	-> BLVC_read_broad_dist		: empty;
+			3 	-> BLVC_read_broad_dist_ACK	: BDT_entry[(BVLC_Length - 4)/10];
+			4	-> BLVC_fwd_NPDU		: BIP; #The NPDU follows the BIP, but should be handled via the NPDU structure
+			5	-> BLVC_reg_fdevice		: uint16;  #This is the TTL of the foregn device.  May need to make this a variable/structure to call it consistently.
+			6	-> BLVC_read_fdevice		: empty;
+			7	-> BLVC_read_fdevice_ACK	: FDT_entry[(BVLC_Length - 4)/10]; 
+			8	-> BLVC_del_fdevice		: BIP;
+			9	-> BLVC_fdevice_broadcast	: bytestring &length = (BVLC_Length - 4);
+			10	-> BLVC_unicast_NPDU		: bytestring &length = (BVLC_Length - 4);
+			11	-> BLVC_broadcast_NPDU		: bytestring &length = (BVLC_Length - 4);
+			12	-> BLVC_secure			: bytestring &length = (BVLC_Length - 4);
+			default	-> BLVC_undefined		: bytestring &length = (BVLC_Length - 4);
+			};
+		NPDU			: case BVLC_Function of {
+			4	-> FWD_NPDU 	: BACnet_NPDU;	#This is the BACnet Network Layer of a Forwarded NPDU BACnet packet
+			10	-> Unicast_NPDU	: BACnet_NPDU;	#This is the BACnet Network Layer of a Unicast NPDU BACnet packet
+			11	-> Broad_NPDU 	: BACnet_NPDU;	#This is the BACnet Network Layer of a Broadcast NPDU BACnet packet
+			default	-> No_NPDU	: empty;
+			};
+
+
+	 };
+
+#BACnet B/IP type
+	type BIP = record {
+		IP_addr	:	uint32;
+		UDP_prt	:	uint16;
+	};
+
+#BACnet B/IP and Broadcast Distribution Mask (BDM) for Broadcast Distribution Table
+	type BDT_entry = record {
+		BDT_BIP	:	BIP;
+		BDM		:	uint32;
+	};
+
+#BACnet Foreign device table
+	type FDT_entry = record {
+		FDT_BIP		:	BIP;
+		Reg_TTL		:	uint16;
+		Remain_TTL	:	uint16;
+	};
+
+
+
+#The BACnet_NPD type describes the BACnet Network Protocol Data Unit (NPDU) portion of a BACnet packet
+	type BACnet_NPDU = record {
+	 	NPDU_Version	: uint8;	#Should be = 1
+
+		NPDU_Control	: uint8;	#The value of NPDU_Control determines what other NPDU fields exist in the packet as well as if there is an APDU
+
+		NPDU_Dst	: case (NPDU_Control & 0x20) of {
+				0x20	-> Dst		: Dst_Type;		#Destination information fields only exist if NPDU_Control bit 5 = 1
+				default -> nothing1	: empty;
+		};
+
+
+		NPDU_Src	: case (NPDU_Control & 0x8) of {
+				0x8	-> Src		: Src_Type;		#Destination information fields only exist if NPDU_Control bit 5 = 1
+				default -> nothing2	: empty;
+		};
+
+
+		NPDU_Hop_Count	: case (NPDU_Control & 0x20) of {
+				0x20	-> Hop_Count	: uint8;		#Hop Count field only exist if NPDU_Control bit 5 = 1
+				default -> nothing3	: empty;
+		};
+
+
+		NPDU_Msg_Type	: case (NPDU_Control & 0x80) of {
+
+				0x80	-> N_Msg_Type	: Msg_Type;		#Msg_Type only exists if NPDU_Control bit 7 = 1
+				0x00	-> APDU_Present	: APDU_Type;		#An APDU only exists if NPDU_Control bit 7 = 0
+		};
+
+
+};
+
+
+#NPDU destiantion related fields
+	type Dst_Type = record{
+
+		NPDU_DNET	: uint16;
+
+	#NPDU_DLEN should always be 6 for BACnet/IP since DADR shuld hold a MAC address, which is 6 octets long
+		NPDU_DLEN	: uint8;
+		NPDU_DADR	: bytestring &length = NPDU_DLEN;
+	};
+
+#NPDU source related fields
+	type Src_Type = record{
+
+		NPDU_SNET	: uint16;
+
+	#NPDU_DLEN should always be 6 for BACnet/IP since DADR shuld hold a MAC address, which is 6 octets long
+		NPDU_SLEN	: uint8;
+		NPDU_SADR	: bytestring &length = NPDU_SLEN;
+	};
+
+#NPDU Mesage Type related fields
+	type Msg_Type = record{
+		
+		NPDU_MSGTYPE	: uint8;
+		NPDU_Vendor_ID	: case (NPDU_MSGTYPE & 0x80) of {
+				0x80	-> Vendor_ID	: uint16;
+				default -> nothing5	: empty;
+				};
+	};
+
+
+#APDU  related fileds
+	type APDU_Type = record{
+
+		APDUType	-> uint8;	#The 1st byte after the NPDU describes which type of APDU is present in the packet
+
+	#The APDU is determined by the first 4 bits of APDUType.
+		APDU	case (APDUType & 0xF0) of {
+			0x00	-> APDU_Conf_Req 	: A_Conf_Req;	#This is the BACnet Application Layer PDU for a confirmed request
+			0x10	-> APDU_Unconf_Req	: A_Unconf_Req;	#This is the BACnet Application Layer PDU for an unconfirmed request
+			0x20	-> APDU_Simple		: A_Simple;		#This is the BACnet Application Layer PDU for a simple ACK PDU
+			0x30	-> APDU_Complex		: A_Complex;		#This is the BACnet Application Layer PDU for a complex ACK PDU
+			0x40	-> APDU_Segment		: A_Segment;		#This is the BACnet Application Layer PDU for a segment ACK PDU
+			0x50	-> APDU_Error		: A_Error;		#This is the BACnet Application Layer PDU for an error PDU
+			0x60	-> APDU_Reject		: A_Reject;		#This is the BACnet Application Layer PDU for a reject PDU
+			0x70	-> APDU_Abort		: A_Abort;		#This is the BACnet Application Layer PDU for an abort PDU
+			default	-> No_APDU		: empty;
+			};	
+
+	};
+
+
+#This defines the structure of a certain type of APDU
+	type A_Conf_Req = record{
+
+	PDU_Type_Segs		-> uint16;
+	Invoke_ID		-> uint8;
+	A_Sequence_Num		case (PDU_Type_Segs & 0x800) of { 
+				0 	-> empty;
+				0x800 	-> Sequence_Num : uint8;
+				default -> empty;
+		};
+
+	A_Prop_Win_Size		case (PDU_Type_Segs & 0x800) of {
+				0 	-> empty;
+				0x800 	-> PWS : uint8;
+				default -> empty;
+		};
+
+### Consider adding a check to ensure PWS is != to 0.  Only values allowed are 1 thru 127 per spec.
+
+	Service_Choice		uint8;
+	Service_Request		APDU_Tag;
+
+### May need to add in more portions of the packet to analyze, but I'm not sure there is a lot of value in it yet.
+
+}&let{
+
+	PDU_Type		-> uint8 = ((PDU_Type_Segs & 0xF000) >> 12);	#PDU_Type is the higest 4 bits of the APDU and of PDU_Type_Segs
+	Segmeneted		-> bool  = ((PDU_Type_Segs >> 11) & 1 );	#The Segmeneted bit is the 11th bit of PDU_Type_Segs
+	More_Follows		-> bool  = ((PDU_Type_Segs >> 10) & 1 );	#The More_Follows bit is the 10th bit of PDU_Type_Segs
+	Seg_Resp_Accept		-> bool  = ((PDU_Type_Segs >> 9) & 1 );		#The Seg_Resp_Accept bit is the 9th bit of PDU_Type_Segs
+
+### Consider adding a check of PDU_Type_Segs bits 7 and 8, which should = 0 per the specificaiton
+
+	Max_Segs		-> uint8 = ((PDU_Type_Segs >> 4) & 0x7 );	#Max_Segs is 3 bits large and bits 4-6 of PDU_Type_Segs
+	Max_Resp		-> uint8 = (PDU_Type_Segs & 0xF );		#Max_Segs is 4 bits large and bits 0-3 of PDU_Type_Segs
+	
+};
+
+#This defines the structure of BACnet APDU Tags
+	type APDU_Tag = record{
+
+	A_Tag1		-> unit8;
+	Second_Tag	->	case (A_Tag1 & 0xF0) of {
+				0	-> empty;
+				0xF0	-> A_Tag2 : uint8;
+				default -> empty;
+			};
+
+}&let{
+	Tag_Num		-> uint8 = (A_Tag1 >> 4) &if((A_Tag1 & 0xF0) < 0xF0);
+	Tag_Num		-> uint8 =  A_Tag2 &if((A_Tag1 & 0xF0) == 0xF0);	###Value of 255 is illegal - need to add code
+	Tag_Class	-> bool  = ((A_Tag1 >> 3) & 1);
+	LVT		-> uint8 = (A_Tag1 & 0x7);
+};
+
+
+#This defines the structure of a certain type of APDU
+	type A_Unconf_Req = record{
+
+	PDU_Type_Segs		uint8;
+	Service_Choice		uint8;
+	Service_Request		APDU_Tag;
+### May need to add in more portions of the packet to analyze, but I'm not sure there is a lot of value in it yet.
+
+}&let{
+	PDU_Type	-> uint8 = ((PDU_Type_Segs & 0xF0) >> 4);	#PDU_Type is the higest 4 bits of the APDU and of PDU_Type_Segs	
+};
+
+#This defines the structure of a certain type of APDU
+	type A_Simple = record{
+
+};
+
+#This defines the structure of a certain type of APDU
+	type A_Complex = record{
+
+};
+
+#This defines the structure of a certain type of APDU
+	type A_Segment = record{
+
+};
+
+#This defines the structure of a certain type of APDU
+	type A_Error = record{
+
+};
+
+#This defines the structure of a certain type of APDU
+	type A_Reject = record{
+
+};
+
+#This defines the structure of a certain type of APDU
+	type A_Abort = record{
+
+};
+
+
+
+
+
+
+# The below parameters can be manipulated by the user in Zeek
+	type BACNET_PDU(is_orig: bool) = record {
+		BVLC_Type 	: uint8;
+		BVLC_Function 	: uint8;
+		BVLC_Length	: uint16;
+		BVLC_Data	: case BVLC_Function of {
+			0	-> BLVC_result			: uint16;
+			1	-> BLVC_write_broad_dist	: BDT_entry[(BVLC_Length - 4)/10];
+			2	-> BLVC_read_broad_dist		: empty;
+			3 	-> BLVC_read_broad_dist_ACK	: BDT_entry[(BVLC_Length - 4)/10];
+			4	-> BLVC_fwd_NPDU		: BIP; #The NPDU follows the BIP, but should be handled via the NPDU structure
+			5	-> BLVC_reg_fdevice		: uint16;  #This is the TTL of the foregn device.  May need to make this a variable/structure to call it consistently.
+			6	-> BLVC_read_fdevice		: empty;
+			7	-> BLVC_read_fdevice_ACK	: FDT_entry[(BVLC_Length - 4)/10]; 
+			8	-> BLVC_del_fdevice		: BIP;
+			9	-> BLVC_fdevice_broadcast	: bytestring &length = (BVLC_Length - 4);
+			10	-> BLVC_unicast_NPDU		: bytestring &length = (BVLC_Length - 4);
+			11	-> BLVC_broadcast_NPDU		: bytestring &length = (BVLC_Length - 4);
+			12	-> BLVC_secure			: bytestring &length = (BVLC_Length - 4);
+			default	-> BLVC_unknown_data		: bytestring &length = (BVLC_Length - 4);
+		};
+		NPDU			: case BVLC_Function of {
+			4	-> FWD_NPDU 	: BACnet_NPDU;	#This is the BACnet Network Layer of a Forwarded NPDU BACnet packet
+			10	-> Unicast_NPDU	: BACnet_NPDU;	#This is the BACnet Network Layer of a Unicast NPDU BACnet packet
+			11	-> Broad_NPDU 	: BACnet_NPDU;	#This is the BACnet Network Layer of a Broadcast NPDU BACnet packet
+			default	-> No_NPDU	: empty;
+			};
+
+
+ } &byteorder=bigendian;

@@ -1,0 +1,6 @@
+module bacnet;
+
+type BVLCHeaders: record;
+type NPDUs: record;
+type MiniNPDUs: record;
+module GLOBAL;

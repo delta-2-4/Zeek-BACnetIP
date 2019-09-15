@@ -1,0 +1,6 @@
+[package]
+description = Protocol analyzer for the BACnet building automation protocol.
+tags = plugin, analyzer, BACnet, bacnet
+plugin_dir = build/Heller_bacnet.tgz
+script_dir = build/scripts/Heller/bacnet
+build_command = test -e %(bro_dist)s/bro-path-dev.in && ( ./configure --bro-dist=%(bro_dist)s && make ) || ( ./configure && make )
