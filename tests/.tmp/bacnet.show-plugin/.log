@@ -1,0 +1,2 @@
+bro -NN Heller::bacnet |sed -e 's/version.*)/version)/g' >output (expect success)
+btest-diff output (expect success)
